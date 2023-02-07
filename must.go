@@ -1,6 +1,8 @@
 package must
 
-import "log"
+import (
+	"log"
+)
 
 type FatalHandler func(format string, v ...any)
 
@@ -15,24 +17,25 @@ func init() {
 	SetFatalHandler(log.Fatalf)
 }
 
-func ReturnF[K any](r K, err error) func(format string, v ...any) K {
+func Must0f(err error, format string, v ...any) {
+	if err != nil {
+		fatalArgs := append([]any{err}, v...)
+		fatalf(format, fatalArgs...)
+	}
+}
+
+func Must0(err error) {
+	Must0f(err, "%v")
+}
+
+func Mustf[K any](r K, err error) func(format string, v ...any) K {
 	return func(format string, v ...any) K {
-		if err != nil {
-			fatalArgs := append([]any{err}, v...)
-			fatalf(format, fatalArgs...)
-		}
+		Must0f(err, format, v...)
 		return r
 	}
 }
 
-func Return[K any](r K, err error) K {
-	return ReturnF[K](r, err)("%v")
-}
+func Must[K any](r K, err error) K {
 
-func MustF(err error, format string, v ...any) {
-	_ = ReturnF(0, err)(format, v...)
-}
-
-func Must(err error) {
-	_ = Return(0, err)
+	return Mustf[K](r, err)("%v")
 }
